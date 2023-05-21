@@ -5,7 +5,10 @@ from pyspark.sql import *
 from pyspark.sql.functions import *
 
 if __name__ == "__main__":
-    spark = SparkSession.builder.getOrCreate()
+    spark = SparkSession.builder \
+        .master('local[*]') \
+        .config("spark.driver.memory", "15g") \
+        .getOrCreate()
     sc = spark.sparkContext
 
     rating_data = spark.read.csv("data/all_data.csv")
@@ -27,7 +30,7 @@ if __name__ == "__main__":
         ratingCol="rating",
         coldStartStrategy="drop"
     )
-    model = als.fit(test)
+    model = als.fit(training)
 
     predictions = model.transform(test)
     evaluator = RegressionEvaluator(
