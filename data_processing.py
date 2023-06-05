@@ -19,3 +19,7 @@ if __name__ == "__main__":
     ]
     new_file_path = "data/all_data.csv"
     combined_data_to_csv(file_paths, new_file_path)
+    
+    file_paths = ["data/archive/probe.txt"]
+    new_file_path = "data/probe.csv"
+    combined_data_to_csv(file_paths, new_file_path)

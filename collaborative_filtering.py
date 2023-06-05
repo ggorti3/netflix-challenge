@@ -19,7 +19,16 @@ if __name__ == "__main__":
         rating_data._c3.cast("date").alias("date"),
     )
 
-    (training, test) = rating_data.randomSplit([0.8, 0.2])
+    probe = spark.read.csv("data/probe.csv")
+    probe = probe.select(
+        probe._c0.cast("int").alias("movie_id"),
+        probe._c1.cast("int").alias("user_id")
+    )
+
+    training = rating_data.join(probe, ["movie_id", "user_id"], "left_anti")
+    probe = rating_data.join(probe, ["movie_id", "user_id"], "inner")
+
+    (val, test) = rating_data.randomSplit([0.5, 0.5], seed=1)
 
     als = ALS(
         maxIter=5,
