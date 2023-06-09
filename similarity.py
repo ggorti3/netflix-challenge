@@ -87,30 +87,16 @@ def similarities(training, k, alpha):
 
 
 if __name__ == "__main__":
+    from collaborative_filtering import get_data
+
     spark = SparkSession.builder \
         .master('local[*]') \
-        .config("spark.driver.memory", "36g") \
+        .config("spark.driver.memory", "3g") \
+        .config("spark.executor.memory", "16g") \
         .getOrCreate()
     sc = spark.sparkContext
 
-    rating_data = spark.read.csv("data/all_data.csv")
-    rating_data = rating_data.select(
-        rating_data._c0.cast("int").alias("movie_id"),
-        rating_data._c1.cast("int").alias("user_id"),
-        rating_data._c2.cast("int").alias("rating"),
-        rating_data._c3.cast("date").alias("date"),
-    )
-
-    probe = spark.read.csv("data/probe.csv")
-    probe = probe.select(
-        probe._c0.cast("int").alias("movie_id"),
-        probe._c1.cast("int").alias("user_id")
-    )
-
-    training = rating_data.join(probe, ["movie_id", "user_id"], "left_anti")
-    probe = rating_data.join(probe, ["movie_id", "user_id"], "inner")
-
-    (val, test) = rating_data.randomSplit([0.5, 0.5], seed=1)
+    training, val, test = get_data("data/all_data.csv")
 
     k = 500
     alpha = 100
