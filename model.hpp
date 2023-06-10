@@ -19,7 +19,7 @@ class Model {
 
         std::unordered_map<uint, uint> userIdxs;
 
-        SparseMatrix R;
+        SparseVector* R;
     
     public:
         void initialize(std::string dataPath, uint numUsers, uint numMovies, uint k, double lambda);

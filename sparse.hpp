@@ -3,33 +3,14 @@
 
 #include <vector>
 
-class SparseMatrix
-{
-  private:
-    std::vector<int> i_idx;
-    std::vector<int> j_idx;
-    std::vector<double> a;
-    int ncols;
-    int nrows;
-
-    /* TODO: Add any additional private data attributes and/or methods  you need */
-
-
-  public:
-    /* Method to modify sparse matrix dimensions */
-    void Resize(int nrows, int ncols);
-
-    /* Method to add entry to matrix in COO format */
-    void AddEntry(int i, int j, double val);
-
-    /* Method to convert COO matrix to CSR format using provided function */
-    void ConvertToCSR();
-
-    /* Method to perform sparse matrix vector multiplication using CSR formatted matrix */
-    std::vector<double> MulVec(std::vector<double> &vec);
-
-    /* TODO: Add any additional public methods you need */
+class SparseVector {
+    private:
+        std::vector<unsigned int> idxs;
+        std::vector<double> vals;
     
+    public:
+        void AddEntry(unsigned int i, double val);
+        double Dot(std::vector<double>& v);
 };
 
 #endif /* SPARSE_HPP */

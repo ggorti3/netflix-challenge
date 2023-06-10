@@ -1,28 +1,15 @@
 #include "sparse.hpp"
-#include "COO2CSR.hpp"
-#include "matvecops.hpp"
 #include <vector>
 
-void SparseMatrix::Resize(int nrows, int ncols) {
-    this->nrows = nrows;
-    this->ncols = ncols;
+void SparseVector::AddEntry(unsigned int i, double val) {
+    this->idxs.push_back(i);
+    this->vals.push_back(val);
 }
 
-void SparseMatrix::AddEntry(int i, int j, double val) {
-    this->i_idx.push_back(i);
-    this->j_idx.push_back(j);
-    this->a.push_back(val);
-}
-
-void SparseMatrix::ConvertToCSR() {
-    COO2CSR(this->a, this->i_idx, this->j_idx);
-}
-
-std::vector<double> SparseMatrix::MulVec(std::vector<double> &vec) {
-    return rMult(
-        this->a,
-        this->j_idx,
-        this->i_idx,
-        vec
-    );
+double SparseVector::Dot(std::vector<double>& v) {
+    double result = 0;
+    for (unsigned int i = 0; i < this->idxs.size(); i++) {
+        result += v[this->idxs[i]] * this->vals[i];
+    }
+    return result;
 }

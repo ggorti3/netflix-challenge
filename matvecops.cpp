@@ -72,39 +72,3 @@ double dot(std::vector<double>& v1, std::vector<double>& v2) {
     }
     return result;
 }
-
-std::vector<double> rMult(
-    std::vector<double>& values,
-    std::vector<int>& col_idx,
-    std::vector<int>& row_idx,
-    std::vector<double>& v) {
-
-    std::vector<double> v2;
-
-    // iterate through rows by observing entries in row_idx
-    unsigned int i = 0;
-    while (i < row_idx.size() - 1) {
-        uint j = (uint) row_idx[i];
-        double sum = 0;
-        // iterate through values in each row and increment sum
-        while (j < row_idx[i + 1]) {
-            // use .at() to throw exception for ill defined 
-            // matrix and/or vector
-            try {
-                sum += values.at(j) * v.at(col_idx.at(j));
-            }
-            catch (...) {
-                std::cout << "ill defined matrix and/or";
-                std::cout << "vector during matrix multiplication";
-                std::cout << std::endl;
-                exit(0);
-            }
-            j++;
-        }
-        // append result to v2
-        v2.push_back(sum);
-        i++;
-    }
-
-    return v2;
-}

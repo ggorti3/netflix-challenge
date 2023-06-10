@@ -23,11 +23,12 @@ void Model::initialize(std::string dataPath, uint numUsers, uint numMovies, uint
     this->k = k;
     this->lambda = lambda;
 
-    // instantiate vectors for latent factors and counts
+    // instantiate vectors for latent factors, counts, dataset
     this->U = new std::vector<double>[numUsers];
     this->M = new std::vector<double>[numMovies];
     int* userRatingCounts = new int[numUsers];
     int* movieRatingCounts = new int[numMovies];
+    this->R = new SparseVector[numUsers];
     
     // fill vectors
     double muUserFillValue = 1 / double(numUsers);
@@ -54,7 +55,7 @@ void Model::initialize(std::string dataPath, uint numUsers, uint numMovies, uint
     std::cout << "Vectors initialized" << std::endl;
 
     // read data file and calculate means
-    std::ifstream f(dataPath);
+    std::ifstream f1(dataPath);
 
     uint movieId, userId;
     double rating;
@@ -62,9 +63,10 @@ void Model::initialize(std::string dataPath, uint numUsers, uint numMovies, uint
     uint userIdx = 0;
     int numRatings = 0;
 
+    // first pass
     std::string line, word;
-    if (f.is_open()) {
-        while (std::getline(f, line)) {
+    if (f1.is_open()) {
+        while (std::getline(f1, line)) {
             std::stringstream str(line);
             std::getline(str, word, ',');
             movieId = (uint)std::stoi(word);
@@ -80,39 +82,69 @@ void Model::initialize(std::string dataPath, uint numUsers, uint numMovies, uint
 
             mu += rating;
 
-            this->muMovies[movieId - 1] += rating;
-            movieRatingCounts[movieId - 1] += 1;
-
             this->muUsers[this->userIdxs[userId]] += rating;
             userRatingCounts[this->userIdxs[userId]] += 1;
 
-            if (numRatings % 1000000 == 0) {
-                std::cout << "iteration " << numRatings << std::endl;
-            }
-
             numRatings++;
         }
-        f.close();
-    } else {
-        std::cout << "o no" << std::endl;
+        f1.close();
     }
 
     // normalize means
     mu = mu / numRatings;
 
+    for (i = 0; i < numUsers; i++) {
+        this->muUsers[i] = (this->muUsers[i] / double(userRatingCounts[i])) - mu;
+    }
+    delete [] userRatingCounts;
+
+    std::cout << "First pass complete" << std::endl;
+
+    // second pass
+    std::ifstream f2(dataPath);
+    if (f2.is_open()) {
+        while (std::getline(f2, line)) {
+            std::stringstream str(line);
+            std::getline(str, word, ',');
+            movieId = (uint)std::stoi(word);
+            std::getline(str, word, ',');
+            userId = (uint)std::stoi(word);
+            std::getline(str, word, ',');
+            rating = std::stod(word);
+
+
+            this->muMovies[movieId - 1] += (rating - mu - this->muUsers[this->userIdxs[userId]]);
+            movieRatingCounts[movieId - 1] += 1;
+        }
+        f2.close();
+    }
+
+    // normalize
     for (i = 0; i < numMovies; i++) {
         this->muMovies[i] = this->muMovies[i] / double(movieRatingCounts[i]);
     }
+    delete [] movieRatingCounts;
 
-    for (i = 0; i < numUsers; i++) {
-        this->muUsers[i] = this->muUsers[i] / double(userRatingCounts[i]);
+    std::cout << "Second pass complete" << std::endl;
+
+    // third pass
+    std::ifstream f3(dataPath);
+    if (f3.is_open()) {
+        while (std::getline(f3, line)) {
+            std::stringstream str(line);
+            std::getline(str, word, ',');
+            movieId = (uint)std::stoi(word);
+            std::getline(str, word, ',');
+            userId = (uint)std::stoi(word);
+            std::getline(str, word, ',');
+            rating = std::stod(word);
+
+            this->R[this->userIdxs[userId]].AddEntry(movieId - 1, rating - mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1]);
+        }
+        f3.close();
     }
 
-    std::cout << mu << std::endl;
-
-    // free temporary arrays
-    delete [] userRatingCounts;
-    delete [] movieRatingCounts;
+    std::cout << "Third pass complete" << std::endl;
 }
 
 void Model::train(std::string trainDataPath, std::string valDataPath, double lr, uint epochs) {
@@ -193,7 +225,8 @@ void Model::predict(std::string dataPath) {
             rating = std::stod(word);
 
             // calculate epsilon
-            epsilon = (rating - this->mu - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
+            //epsilon = (rating - this->mu - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
+            epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1]);
 
             // calculate loss
             loss += pow(epsilon, 2);
