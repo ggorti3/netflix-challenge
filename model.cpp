@@ -115,11 +115,11 @@ void Model::initialize(std::string dataPath, uint numUsers, uint numMovies, uint
     delete [] movieRatingCounts;
 }
 
-void Model::train(std::string dataPath, double lr, uint epochs) {
+void Model::train(std::string trainDataPath, std::string valDataPath, double lr, uint epochs) {
     uint e;
     for (e = 0; e < epochs; e++) {
         // instantiate temp variables, open file
-        std::ifstream f(dataPath);
+        std::ifstream f(trainDataPath);
         uint movieId, userId;
         double rating, epsilon;
         double loss = 0;
@@ -164,6 +164,8 @@ void Model::train(std::string dataPath, double lr, uint epochs) {
             }
             f.close();
         }
+
+        this->predict(valDataPath);
     }
 
 }
