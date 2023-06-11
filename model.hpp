@@ -11,14 +11,21 @@ class Model {
     private:
         unsigned int k;
         long double lambda;
+
+        // biases (not tuned)
         long double mu;
         std::vector<long double> muUsers;
         std::vector<long double> muMovies;
+
+        // factors
         std::vector<long double>* U;
         std::vector<long double>* M;
 
-        std::unordered_map<unsigned int, unsigned int> userIdxs;
+        // weights
+        std::vector<long double>* W;
 
+        // useful stuff
+        std::unordered_map<unsigned int, unsigned int> userIdxs;
         SparseVector* R;
     
     public:

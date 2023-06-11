@@ -11,7 +11,7 @@
 #include "matvecops.hpp"
 #include "model.hpp"
 
-void Model::initialize(std::string dataPath, uint numUsers, uint numMovies, uint k, long double lambda) {
+void Model::initialize(std::string dataPath, unsigned int numUsers, unsigned int numMovies, unsigned int k, long double lambda) {
 
     std::cout << "initializing" << std::endl;
     
@@ -23,15 +23,15 @@ void Model::initialize(std::string dataPath, uint numUsers, uint numMovies, uint
     this->k = k;
     this->lambda = lambda;
 
-    // instantiate vectors for latent factors, counts, dataset
+    // instantiate vectors for latent factors, weights, counts, dataset
     this->U = new std::vector<long double>[numUsers];
     this->M = new std::vector<long double>[numMovies];
+    this->W = new std::vector<long double>[numMovies];
     int* userRatingCounts = new int[numUsers];
     int* movieRatingCounts = new int[numMovies];
     this->R = new SparseVector[numUsers];
     
     // fill vectors
-    //long double muUserFillValue = 1 / (long double)numUsers;
     uint i = 0;
     for (i = 0; i < numUsers; i++) {
         userRatingCounts[i] = 0;
@@ -42,13 +42,16 @@ void Model::initialize(std::string dataPath, uint numUsers, uint numMovies, uint
         }
     }
 
-    //long double muMovieFillValue = 1 / (long double)numMovies;
     for (i = 0; i < numMovies; i++) {
         movieRatingCounts[i] = 0;
         this->muMovies.push_back(0);
         uint j;
         for (j = 0; j < this->k; j++) {
             this->M[i].push_back(distribution(generator));
+        }
+        // fill weights
+        for (j = 0; j < numMovies; j++) {
+            this->W[i].push_back(0);
         }
     }
 
@@ -149,13 +152,13 @@ void Model::initialize(std::string dataPath, uint numUsers, uint numMovies, uint
     std::cout << "Third pass complete" << std::endl;
 }
 
-void Model::train(std::string trainDataPath, std::string valDataPath, long double lr, uint epochs) {
+void Model::train(std::string trainDataPath, std::string valDataPath, long double lr, unsigned int epochs) {
     uint e;
     for (e = 0; e < epochs; e++) {
         // instantiate temp variables, open file
         std::ifstream f(trainDataPath);
         uint movieId, userId;
-        long double rating, epsilon;
+        long double rating, epsilon, wComponent, shrink;
         long double loss = 0;
         std::vector<long double> temp1, temp2;
         std::string date;
@@ -173,8 +176,12 @@ void Model::train(std::string trainDataPath, std::string valDataPath, long doubl
                 std::getline(str, word, ',');
                 rating = std::stod(word);
 
+                // calculate neighbors component
+                shrink = pow((long double) this->R[this->userIdxs[userId]].Size(), 0.5);
+                wComponent = this->R[this->userIdxs[userId]].Dot(this->W[movieId - 1]) / shrink;
+
                 // calculate epsilon
-                epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
+                epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
 
                 // update factors
                 temp1 = scale(this->U[this->userIdxs[userId]], 2 * lr * epsilon);
@@ -187,11 +194,14 @@ void Model::train(std::string trainDataPath, std::string valDataPath, long doubl
                 temp1 = add(temp2, temp1, true);
                 this->U[this->userIdxs[userId]] = add(this->U[this->userIdxs[userId]], temp1, true);
 
+                // update weights
+                this->R[this->userIdxs[userId]].Update(-2 * lr * epsilon / shrink, this->lambda, this->W[movieId - 1]);
+
                 // calculate loss
                 loss += pow(epsilon, 2);
 
                 if (i != 0 && i % 1000000 == 0) {
-                    std::cout << "iteration " << i << " running loss " << loss / i << std::endl;
+                    std::cout << "iteration " << i << " running loss " << pow(loss / i, 0.5) << std::endl;
                 }
 
                 i++;
@@ -208,7 +218,7 @@ void Model::predict(std::string dataPath) {
     // instantiate temp variables, open file
     std::ifstream f(dataPath);
     uint movieId, userId;
-    long double rating, epsilon;
+    long double rating, epsilon, wComponent;
     long double loss = 0;
     std::vector<long double> temp1, temp2;
     std::string date;
@@ -226,9 +236,12 @@ void Model::predict(std::string dataPath) {
             std::getline(str, word, ',');
             rating = std::stod(word);
 
+            // calculate neighbors component
+            wComponent = this->R[this->userIdxs[userId]].Dot(this->W[movieId - 1]) / pow((long double) this->R[this->userIdxs[userId]].Size(), 0.5);
+
             // calculate epsilon
-            epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1]);
-            //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
+            //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1]);
+            epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
 
 
             // calculate loss
