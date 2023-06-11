@@ -14,9 +14,9 @@ long double SparseVector::Dot(std::vector<long double>& v) {
     return result;
 }
 
-void SparseVector::Update(long double multiplier, long double lambda, std::vector<long double>& w) {
+void SparseVector::Update(long double epsilon, long double lambda, long double lr, std::vector<long double>& w) {
     for (unsigned int i = 0; i < this->idxs.size(); i++) {
-        w[this->idxs[i]] = w[this->idxs[i]] - (multiplier * this->vals[i] + lambda * w[this->idxs[i]]);
+        w[this->idxs[i]] = w[this->idxs[i]] - 2 * lr * (-epsilon * this->vals[i] + lambda * w[this->idxs[i]]);
     }
 }
 

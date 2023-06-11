@@ -195,7 +195,7 @@ void Model::train(std::string trainDataPath, std::string valDataPath, long doubl
                 this->U[this->userIdxs[userId]] = add(this->U[this->userIdxs[userId]], temp1, true);
 
                 // update weights
-                this->R[this->userIdxs[userId]].Update(-2 * lr * epsilon / shrink, this->lambda, this->W[movieId - 1]);
+                this->R[this->userIdxs[userId]].Update(epsilon, lambda, lr, this->W[movieId - 1]);
 
                 // calculate loss
                 loss += pow(epsilon, 2);
