@@ -9,21 +9,21 @@
 class Model {
 
     private:
-        uint k;
-        double lambda;
-        double mu;
-        std::vector<double> muUsers;
-        std::vector<double> muMovies;
-        std::vector<double>* U;
-        std::vector<double>* M;
+        unsigned int k;
+        long double lambda;
+        long double mu;
+        std::vector<long double> muUsers;
+        std::vector<long double> muMovies;
+        std::vector<long double>* U;
+        std::vector<long double>* M;
 
-        std::unordered_map<uint, uint> userIdxs;
+        std::unordered_map<unsigned int, unsigned int> userIdxs;
 
         SparseVector* R;
     
     public:
-        void initialize(std::string dataPath, uint numUsers, uint numMovies, uint k, double lambda);
-        void train(std::string trainDataPath, std::string valDataPath, double lr, uint epochs);
+        void initialize(std::string dataPath, unsigned int numUsers, unsigned int numMovies, unsigned int k, long double lambda);
+        void train(std::string trainDataPath, std::string valDataPath, long double lr, unsigned int epochs);
         void predict(std::string dataPath);
 
 };

@@ -2,7 +2,7 @@
 #include <vector>
 #include "matvecops.hpp"
 
-void print_vec(std::vector<double>& v) {
+void print_vec(std::vector<long double>& v) {
     
     // set formatting flags
     std::cout.setf(std::ios_base::scientific);
@@ -15,8 +15,8 @@ void print_vec(std::vector<double>& v) {
     }
 }
 
-double sum(std::vector<double>& v) {
-    double s = 0;
+long double sum(std::vector<long double>& v) {
+    long double s = 0;
     // iterate through the vector and print each value
     for (uint j = 0; j < (uint)v.size(); j++) {
         s += v[j];
@@ -24,11 +24,11 @@ double sum(std::vector<double>& v) {
     return s;
 }
 
-std::vector<double> add(
-    std::vector<double>& v1,
-    std::vector<double>& v2,
+std::vector<long double> add(
+    std::vector<long double>& v1,
+    std::vector<long double>& v2,
     bool subtract) {
-    std::vector<double> v;
+    std::vector<long double> v;
 
     // verify that v1 and v2 are same length
     if (v1.size() != v2.size()) {
@@ -48,8 +48,8 @@ std::vector<double> add(
 
 }
 
-std::vector<double> scale(std::vector<double>& v, double c) {
-    std::vector<double> v2;
+std::vector<long double> scale(std::vector<long double>& v, long double c) {
+    std::vector<long double> v2;
     // iterate through vector and multiply by scale
     for (unsigned int i = 0; i < v.size(); i++) {
         v2.push_back(c * v[i]);
@@ -57,7 +57,7 @@ std::vector<double> scale(std::vector<double>& v, double c) {
     return v2;
 }
 
-double dot(std::vector<double>& v1, std::vector<double>& v2) {
+long double dot(std::vector<long double>& v1, std::vector<long double>& v2) {
     // verify that v1 and v2 are same length
     if (v1.size() != v2.size()) {
         std::cout << "dot product: vectors must be same length" << std::endl;
@@ -65,7 +65,7 @@ double dot(std::vector<double>& v1, std::vector<double>& v2) {
     }
 
     // iterate through vectors
-    double result = 0;
+    long double result = 0;
     for (unsigned int i = 0; i < v1.size(); i++) {
         // increment result by product of entries
         result += v1[i] * v2[i];
