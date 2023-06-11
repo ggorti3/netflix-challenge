@@ -152,7 +152,7 @@ void Model::initialize(std::string dataPath, unsigned int numUsers, unsigned int
     std::cout << "Third pass complete" << std::endl;
 }
 
-void Model::train(std::string trainDataPath, std::string valDataPath, long double lr, unsigned int epochs) {
+void Model::train(std::string trainDataPath, std::string valDataPath, long double lr, long double decay, unsigned int epochs) {
     uint e;
     for (e = 0; e < epochs; e++) {
         // instantiate temp variables, open file
@@ -195,13 +195,14 @@ void Model::train(std::string trainDataPath, std::string valDataPath, long doubl
                 this->U[this->userIdxs[userId]] = add(this->U[this->userIdxs[userId]], temp1, true);
 
                 // update weights
-                this->R[this->userIdxs[userId]].Update(epsilon, lambda, lr, this->W[movieId - 1]);
+                this->R[this->userIdxs[userId]].Update(epsilon, lambda, lr / 5, this->W[movieId - 1]);
 
                 // calculate loss
                 loss += pow(epsilon, 2);
 
                 if (i != 0 && i % 1000000 == 0) {
-                    std::cout << "iteration " << i << " running loss " << pow(loss / i, 0.5) << std::endl;
+                    std::cout << "epoch " << e;
+                    std::cout << " iteration " << i << " running loss " << pow(loss / i, 0.5) << std::endl;
                 }
 
                 i++;
@@ -210,6 +211,7 @@ void Model::train(std::string trainDataPath, std::string valDataPath, long doubl
         }
 
         this->predict(valDataPath);
+        lr = lr * decay;
     }
 
 }
