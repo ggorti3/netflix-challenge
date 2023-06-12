@@ -181,6 +181,7 @@ void Model::train(std::string trainDataPath, std::string valDataPath, long doubl
                 wComponent = this->R[this->userIdxs[userId]].Dot(this->W[movieId - 1]) / shrink;
 
                 // calculate epsilon
+                //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent);
                 epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
 
                 // update factors
@@ -242,7 +243,7 @@ void Model::predict(std::string dataPath) {
             wComponent = this->R[this->userIdxs[userId]].Dot(this->W[movieId - 1]) / pow((long double) this->R[this->userIdxs[userId]].Size(), 0.5);
 
             // calculate epsilon
-            //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1]);
+            //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent);
             epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
 
 
@@ -252,6 +253,49 @@ void Model::predict(std::string dataPath) {
             i++;
         }
         f.close();
+    }
+    std::cout << "rmse " << pow(loss / i, 0.5) << std::endl;
+}
+
+void Model::inference(std::string dataPath, std::string outDataPath) {
+    // instantiate temp variables, open file
+    std::ifstream f(dataPath);
+    std::ofstream f2(outDataPath);
+    uint movieId, userId;
+    long double rating, epsilon, wComponent;
+    long double loss = 0;
+    std::vector<long double> temp1, temp2;
+    std::string date;
+    std::string line, word;
+    int i = 0;
+
+    if (f.is_open() && f2.is_open()) {
+        while (std::getline(f, line)) {
+            // read rating data
+            std::stringstream str(line);
+            std::getline(str, word, ',');
+            movieId = (uint)std::stoi(word);
+            std::getline(str, word, ',');
+            userId = (uint)std::stoi(word);
+            std::getline(str, word, ',');
+            rating = std::stod(word);
+
+            // calculate neighbors component
+            wComponent = this->R[this->userIdxs[userId]].Dot(this->W[movieId - 1]) / pow((long double) this->R[this->userIdxs[userId]].Size(), 0.5);
+
+            // calculate epsilon
+            //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent);
+            epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
+            f2 << movieId << "," << userId << "," << epsilon << std::endl;
+
+
+            // calculate loss
+            loss += pow(epsilon, 2);
+
+            i++;
+        }
+        f.close();
+        f2.close();
     }
     std::cout << "rmse " << pow(loss / i, 0.5) << std::endl;
 }

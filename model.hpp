@@ -32,7 +32,7 @@ class Model {
         void initialize(std::string dataPath, unsigned int numUsers, unsigned int numMovies, unsigned int k, long double lambda);
         void train(std::string trainDataPath, std::string valDataPath, long double lr, long double decay, unsigned int epochs);
         void predict(std::string dataPath);
-
+        void inference(std::string dataPath, std::string outDataPath);
 };
 
 #endif
