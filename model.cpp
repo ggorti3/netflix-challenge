@@ -181,19 +181,19 @@ void Model::train(std::string trainDataPath, std::string valDataPath, long doubl
                 wComponent = this->R[this->userIdxs[userId]].Dot(this->W[movieId - 1]) / shrink;
 
                 // calculate epsilon
-                //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent);
-                epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
+                epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent);
+                //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
 
                 // update factors
-                temp1 = scale(this->U[this->userIdxs[userId]], 2 * lr * epsilon);
-                temp2 = scale(this->M[movieId - 1], 2 * lr * lambda);
-                temp1 = add(temp2, temp1, true);
-                this->M[movieId - 1] = add(this->M[movieId - 1], temp1, true);
+                // temp1 = scale(this->U[this->userIdxs[userId]], 2 * lr * epsilon);
+                // temp2 = scale(this->M[movieId - 1], 2 * lr * lambda);
+                // temp1 = add(temp2, temp1, true);
+                // this->M[movieId - 1] = add(this->M[movieId - 1], temp1, true);
 
-                temp1 = scale(this->M[movieId - 1], 2 * lr * epsilon);
-                temp2 = scale(this->U[this->userIdxs[userId]], 2 * lr * lambda);
-                temp1 = add(temp2, temp1, true);
-                this->U[this->userIdxs[userId]] = add(this->U[this->userIdxs[userId]], temp1, true);
+                // temp1 = scale(this->M[movieId - 1], 2 * lr * epsilon);
+                // temp2 = scale(this->U[this->userIdxs[userId]], 2 * lr * lambda);
+                // temp1 = add(temp2, temp1, true);
+                // this->U[this->userIdxs[userId]] = add(this->U[this->userIdxs[userId]], temp1, true);
 
                 // update weights
                 this->R[this->userIdxs[userId]].Update(epsilon, lambda, lr / 5, this->W[movieId - 1], movieId - 1);
@@ -243,8 +243,8 @@ void Model::predict(std::string dataPath) {
             wComponent = this->R[this->userIdxs[userId]].Dot(this->W[movieId - 1]) / pow((long double) this->R[this->userIdxs[userId]].Size(), 0.5);
 
             // calculate epsilon
-            //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent);
-            epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
+            epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent);
+            //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
 
 
             // calculate loss
@@ -284,8 +284,8 @@ void Model::inference(std::string dataPath, std::string outDataPath) {
             wComponent = this->R[this->userIdxs[userId]].Dot(this->W[movieId - 1]) / pow((long double) this->R[this->userIdxs[userId]].Size(), 0.5);
 
             // calculate epsilon
-            //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent);
-            epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
+            epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent);
+            //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
             f2 << movieId << "," << userId << "," << epsilon << std::endl;
 
 
