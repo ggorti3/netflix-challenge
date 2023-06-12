@@ -197,10 +197,11 @@ void Model::train(std::string trainDataPath, std::string valDataPath, long doubl
                 // update weights and biases
                 mu = mu - 2 * (-epsilon * ((bSave / shrink) + 1) + (lambda / 3) * mu);
                 muUsers[userIdxs[userId]] = muUsers[userIdxs[userId]] - 2 * (-epsilon * ((bSave / shrink) + 1) + (lambda / 3) * muUsers[userIdxs[userId]]);
+                muMovies[movieId - 1] = muMovies[movieId - 1] - 2 * lr * ((lambda/3) * muMovies[movieId - 1] - epsilon);
                 for (unsigned int j = 0; j < wSave.Size(); j++) {
                     idx = wSave.idxs[j];
                     muMovies[idx] = muMovies[idx] -2 * lr * (epsilon * bmSave.vals[j] / shrink + (lambda / 3) * muMovies[idx]);
-                    W[movieId - 1][idx] = W[movieId - 1][idx] - 2 * lr * (-epsilon * wSave.vals[j] / shrink + lambda * W[movieId - 1][idx]);
+                    W[movieId - 1][idx] = W[movieId - 1][idx] - 2 * (lr / 5) * (-epsilon * wSave.vals[j] / shrink + lambda * W[movieId - 1][idx]);
                 }
 
                 // calculate loss

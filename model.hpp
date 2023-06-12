@@ -12,7 +12,7 @@ class Model {
         unsigned int k;
         long double lambda;
 
-        // biases (not tuned)
+        // biases
         long double mu;
         std::vector<long double> muUsers;
         std::vector<long double> muMovies;
