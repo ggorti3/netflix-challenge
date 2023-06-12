@@ -89,8 +89,6 @@ void Model::initialize(std::string dataPath, unsigned int numUsers, unsigned int
             this->muUsers[this->userIdxs[userId]] += rating;
             userRatingCounts[this->userIdxs[userId]] += 1;
 
-            this->R[this->userIdxs[userId]].AddEntry(movieId - 1, rating);
-
             numRatings++;
         }
         f1.close();
@@ -133,6 +131,23 @@ void Model::initialize(std::string dataPath, unsigned int numUsers, unsigned int
     delete [] movieRatingCounts;
 
     std::cout << "Second pass complete" << std::endl;
+
+    // third pass
+    std::ifstream f3(dataPath);
+    if (f3.is_open()) {
+        while (std::getline(f3, line)) {
+            std::stringstream str(line);
+            std::getline(str, word, ',');
+            movieId = (uint)std::stoi(word);
+            std::getline(str, word, ',');
+            userId = (uint)std::stoi(word);
+            std::getline(str, word, ',');
+            rating = std::stod(word);
+
+            this->R[this->userIdxs[userId]].AddEntry(movieId - 1, rating - mu - muUsers[userIdxs[userId]] - muMovies[movieId - 1]);
+        }
+        f3.close();
+    }
 }
 
 void Model::train(std::string trainDataPath, std::string valDataPath, long double lr, long double decay, unsigned int epochs) {
@@ -148,9 +163,8 @@ void Model::train(std::string trainDataPath, std::string valDataPath, long doubl
             int i = 0;
             while (std::getline(f, line)) {
                 // temporary variables
-                SparseVector bmSave, wSave;
                 std::vector<long double> temp1, temp2;
-                long double rating, epsilon, wComponent, shrink, bSave;
+                long double rating, epsilon, wComponent, shrink;
                 uint movieId, userId;
 
                 // read rating data
@@ -164,21 +178,15 @@ void Model::train(std::string trainDataPath, std::string valDataPath, long doubl
 
                 // calculate neighbors component, save important values
                 wComponent = 0;
-                bSave = 0;
                 unsigned int idx;
-                long double r;
                 for (unsigned int j = 0; j < R[userIdxs[userId]].Size(); j++) {
                     idx = R[userIdxs[userId]].idxs[j];
                     if (idx != (movieId - 1)) {
-                        r = R[userIdxs[userId]].vals[j];
-                        wComponent += W[movieId - 1][idx] * (r - mu - muUsers[userIdxs[userId]] - muMovies[idx]);
-                        wSave.AddEntry(idx, r - mu - muUsers[userIdxs[userId]] - muMovies[idx]);
-                        bmSave.AddEntry(idx, W[movieId - 1][idx]);
-                        bSave += W[movieId - 1][idx];
+                        wComponent += W[movieId - 1][idx] * R[userIdxs[userId]].vals[j];
                     }
                 }
-                shrink = wSave.Size() > 0 ? pow(wSave.Size(), 0.5) : 0;
-                wComponent = shrink > 0 ? wComponent / shrink : 0;
+                shrink = (R[userIdxs[userId]].Size() > 0) ? pow(R[userIdxs[userId]].Size() - 1, 0.5) : 0;
+                wComponent = (shrink > 0) ? (wComponent / shrink) : 0;
 
                 // calculate epsilon
                 epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
@@ -195,13 +203,9 @@ void Model::train(std::string trainDataPath, std::string valDataPath, long doubl
                 this->U[this->userIdxs[userId]] = add(this->U[this->userIdxs[userId]], temp1, true);
 
                 //update weights and biases
-                mu = mu - 2 * lr * (-epsilon * ((bSave / shrink) + 1) + (lambda / 3) * mu);
-                muUsers[userIdxs[userId]] = muUsers[userIdxs[userId]] - 2 * lr * (-epsilon * ((bSave / shrink) + 1) + (lambda / 3) * muUsers[userIdxs[userId]]);
-                muMovies[movieId - 1] = muMovies[movieId - 1] - 2 * lr * ((lambda/3) * muMovies[movieId - 1] - epsilon);
-                for (unsigned int j = 0; j < wSave.Size(); j++) {
-                    idx = wSave.idxs[j];
-                    muMovies[idx] = muMovies[idx] -2 * lr * (epsilon * bmSave.vals[j] / shrink + (lambda / 3) * muMovies[idx]);
-                    W[movieId - 1][idx] = W[movieId - 1][idx] - 2 * (lr / 5) * (-epsilon * wSave.vals[j] / shrink + lambda * W[movieId - 1][idx]);
+                for (unsigned int j = 0; j < R[userIdxs[userId]].Size(); j++) {
+                    idx = R[userIdxs[userId]].idxs[j];
+                    W[movieId - 1][idx] = W[movieId - 1][idx] - 2 * (lr / 5) * ((-epsilon * R[userIdxs[userId]].vals[j] / shrink) + lambda * W[movieId - 1][idx]);
                 }
 
                 // calculate loss
@@ -256,7 +260,7 @@ void Model::predict(std::string dataPath) {
             for (unsigned int j = 0; j < R[userIdxs[userId]].Size(); j++) {
                 idx = R[userIdxs[userId]].idxs[j];
                 if (idx != (movieId - 1)) {
-                    wComponent += W[movieId - 1][idx] * (R[userIdxs[userId]].vals[j] - mu - muUsers[userIdxs[userId]] - muMovies[idx]);
+                    wComponent += W[movieId - 1][idx] * R[userIdxs[userId]].vals[j];
                 }
             }
             shrink = R[userIdxs[userId]].Size() > 0 ? pow(R[userIdxs[userId]].Size() - 1, 0.5) : 0;
