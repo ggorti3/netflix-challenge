@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     printf("%d\n", sizeof(double)); // some compilers print 8
     printf("%d\n", sizeof(long double)); // some compilers print 16
     Model model;
-    model.initialize(trainDataPath, 480189, 17770, 50, 0.015);
+    model.initialize(trainDataPath, 480189, 17770, 50, 0.04);
     model.train(trainDataPath, valDataPath, 2e-3, 0.9, 30);
     model.predict(valDataPath);
     if (argc > 4) {

@@ -132,22 +132,22 @@ void Model::initialize(std::string dataPath, unsigned int numUsers, unsigned int
 
     std::cout << "Second pass complete" << std::endl;
 
-    //third pass
-    std::ifstream f3(dataPath);
-    if (f3.is_open()) {
-        while (std::getline(f3, line)) {
-            std::stringstream str(line);
-            std::getline(str, word, ',');
-            movieId = (uint)std::stoi(word);
-            std::getline(str, word, ',');
-            userId = (uint)std::stoi(word);
-            std::getline(str, word, ',');
-            rating = std::stod(word);
+    // //third pass
+    // std::ifstream f3(dataPath);
+    // if (f3.is_open()) {
+    //     while (std::getline(f3, line)) {
+    //         std::stringstream str(line);
+    //         std::getline(str, word, ',');
+    //         movieId = (uint)std::stoi(word);
+    //         std::getline(str, word, ',');
+    //         userId = (uint)std::stoi(word);
+    //         std::getline(str, word, ',');
+    //         rating = std::stod(word);
 
-            this->R[this->userIdxs[userId]].AddEntry(movieId - 1, rating - mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1]);
-        }
-        f3.close();
-    }
+    //         this->R[this->userIdxs[userId]].AddEntry(movieId - 1, rating - mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1]);
+    //     }
+    //     f3.close();
+    // }
 
     std::cout << "Third pass complete" << std::endl;
 }
@@ -177,26 +177,27 @@ void Model::train(std::string trainDataPath, std::string valDataPath, long doubl
                 rating = std::stod(word);
 
                 // calculate neighbors component
-                shrink = pow((long double) this->R[this->userIdxs[userId]].Size(), 0.5);
-                wComponent = this->R[this->userIdxs[userId]].Dot(this->W[movieId - 1]) / shrink;
+                // shrink = pow((long double) this->R[this->userIdxs[userId]].Size(), 0.5);
+                // wComponent = this->R[this->userIdxs[userId]].Dot(this->W[movieId - 1]) / shrink;
 
                 // calculate epsilon
-                epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent);
+                //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent);
                 //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
+                epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
 
                 // update factors
-                // temp1 = scale(this->U[this->userIdxs[userId]], 2 * lr * epsilon);
-                // temp2 = scale(this->M[movieId - 1], 2 * lr * lambda);
-                // temp1 = add(temp2, temp1, true);
-                // this->M[movieId - 1] = add(this->M[movieId - 1], temp1, true);
+                temp1 = scale(this->U[this->userIdxs[userId]], 2 * lr * epsilon);
+                temp2 = scale(this->M[movieId - 1], 2 * lr * lambda);
+                temp1 = add(temp2, temp1, true);
+                this->M[movieId - 1] = add(this->M[movieId - 1], temp1, true);
 
-                // temp1 = scale(this->M[movieId - 1], 2 * lr * epsilon);
-                // temp2 = scale(this->U[this->userIdxs[userId]], 2 * lr * lambda);
-                // temp1 = add(temp2, temp1, true);
-                // this->U[this->userIdxs[userId]] = add(this->U[this->userIdxs[userId]], temp1, true);
+                temp1 = scale(this->M[movieId - 1], 2 * lr * epsilon);
+                temp2 = scale(this->U[this->userIdxs[userId]], 2 * lr * lambda);
+                temp1 = add(temp2, temp1, true);
+                this->U[this->userIdxs[userId]] = add(this->U[this->userIdxs[userId]], temp1, true);
 
                 // update weights
-                this->R[this->userIdxs[userId]].Update(epsilon, lambda, lr / 5, this->W[movieId - 1], movieId - 1);
+                // this->R[this->userIdxs[userId]].Update(epsilon, lambda, lr / 5, this->W[movieId - 1], movieId - 1);
 
                 // calculate loss
                 loss += pow(epsilon, 2);
@@ -240,11 +241,13 @@ void Model::predict(std::string dataPath) {
             rating = std::stod(word);
 
             // calculate neighbors component
-            wComponent = this->R[this->userIdxs[userId]].Dot(this->W[movieId - 1]) / pow((long double) this->R[this->userIdxs[userId]].Size(), 0.5);
+            //wComponent = this->R[this->userIdxs[userId]].Dot(this->W[movieId - 1]) / pow((long double) this->R[this->userIdxs[userId]].Size(), 0.5);
 
             // calculate epsilon
-            epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent);
+            //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent);
             //epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - wComponent - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
+            epsilon = (rating - this->mu - this->muUsers[this->userIdxs[userId]] - this->muMovies[movieId - 1] - dot(this->U[this->userIdxs[userId]], this->M[movieId - 1]));
+
 
 
             // calculate loss
